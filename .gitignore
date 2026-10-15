@@ -4,4 +4,5 @@
 # Gmail API + Data
 credentials.json
 email.json
+cleaned_emails.json
 token.json
