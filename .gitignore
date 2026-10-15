@@ -1,0 +1,7 @@
+# Virtual Environment
+.venv
+
+# Gmail API + Data
+credentials.json
+email.json
+token.json
