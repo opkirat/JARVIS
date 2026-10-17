@@ -1,8 +1,22 @@
 # Virtual Environment
 .venv
+.env
+.vscode
+
+
+# Local exports, database, and credentials
+/data/
+/secrets/
+
 
 # Gmail API + Data
 credentials.json
 email.json
 cleaned_emails.json
 token.json
+email copy.json
+jarvis.db
+
+
+# Linkedin Data
+Linkedin
