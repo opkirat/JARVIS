@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 connection = sqlite3.connect(PROJECT_ROOT / "data" / "jarvis.db")
 
 ## Drop table if needed
-connection.execute("DROP TABLE IF EXISTS gmail")
+##connection.execute("DROP TABLE IF EXISTS gmail")
 
 
 connection.execute("""
