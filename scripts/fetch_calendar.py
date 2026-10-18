@@ -1,6 +1,7 @@
 import datetime
 import os.path
 from pathlib import Path
+import json
 
 
 from google.auth.transport.requests import Request
@@ -13,7 +14,7 @@ from googleapiclient.errors import HttpError
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CREDENTIALS_PATH = PROJECT_ROOT / "secrets" / "gmail_credentials.json"
 TOKEN_PATH = PROJECT_ROOT / "secrets" / "gmail_token.json"
-EMAILS_PATH = PROJECT_ROOT / "data" / "gmail" / "raw_emails.json"
+EMAILS_PATH = PROJECT_ROOT / "data" / "gmail" / "raw_calendars.json"
 
 
 
@@ -68,9 +69,15 @@ def main():
       return
 
     # Prints the start and name of the next 10 events
+    all_events = []
     for event in events:
       start = event["start"].get("dateTime", event["start"].get("date"))
       print(start, event["summary"])
+      
+      all_events.append(event)
+      with open(EMAILS_PATH, "w") as file:
+        json.dump(all_events , file, indent=4)
+
 
   except HttpError as error:
     print(f"An error occurred: {error}")

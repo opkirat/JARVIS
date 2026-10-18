@@ -7,16 +7,24 @@ A personal assistant project, starting with Gmail exports and a local SQLite dat
 ```text
 scripts/
   fetch_gmail.py       # Download Gmail messages
-  clean_gmail.py       # Decode messages into a cleaned JSON export (probably to be deleted)
   import_gmail.py      # Decode and load raw Gmail messages into SQLite
+  fetch_calendar.py    # Download upcoming Calendar events
+  import_calendar.py   # Load Calendar events into SQLite
+examples/
   llm_example.py       # Standalone model API example
+  summarize_emails.py  # Summarize selected database emails
 sql/
   list_emails.sql      # Query the Gmail table
 data/                 # Local files; excluded from Git
   gmail/
     raw_emails.json
-    sample_emails.json
     cleaned_emails.json
+    raw_calendars.json # Existing scripts currently reference this path
+  exports/
+    emails.csv
+    email_summary.csv
+  samples/
+    sample_emails.json
   linkedin/           # LinkedIn CSV exports
   jarvis.db
 secrets/              # Local Gmail credentials; excluded from Git
@@ -43,13 +51,7 @@ Fetch Gmail messages using your existing Gmail authorization:
 python scripts/fetch_gmail.py
 ```
 
-Optionally create a cleaned JSON export:
-
-```bash
-python scripts/clean_gmail.py
-```
-
-Import the raw export into SQLite (the cleaner is not required first):
+Import the raw export into SQLite:
 
 ```bash
 python scripts/import_gmail.py
@@ -63,6 +65,12 @@ Run the saved query:
 sqlite3 -header -column data/jarvis.db ".read sql/list_emails.sql"
 ```
 
+Export the Gmail table to CSV:
+
+```bash
+sqlite3 -header -csv data/jarvis.db "SELECT * FROM gmail;" > data/exports/emails.csv
+```
+
 The Gmail scripts resolve data and credential paths relative to the project location, so those paths also work when the scripts are launched from another directory.
 
-`scripts/llm_example.py` makes an API request when run and expects `OPENAI_API_KEY` in the environment. It does not load `.env` itself.
+The scripts in `examples/` make API requests when run and expect `OPENAI_API_KEY` in the environment. They do not load `.env` themselves.
