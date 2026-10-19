@@ -1,21 +1,39 @@
-# Virtual Environment
-.venv
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Credentials and local environment settings
 .env
-.vscode
-
-
-# Local exports, database, and credentials
-/data/
+.env.*
+!.env.example
 /secrets/
-
-# Gmail API + Data
 credentials.json
+token.json
+
+# Personal exports and local databases
+/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
 email.json
 cleaned_emails.json
-token.json
 email copy.json
-jarvis.db
+Linkedin/
 
+# Browser automation output and dependencies
+.playwright-mcp/
+playwright-report/
+test-results/
+node_modules/
 
-# Linkedin Data
-Linkedin
+# Local editor and macOS files
+.vscode/
+.DS_Store

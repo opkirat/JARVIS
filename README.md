@@ -74,3 +74,27 @@ sqlite3 -header -csv data/jarvis.db "SELECT * FROM gmail;" > data/exports/emails
 The Gmail scripts resolve data and credential paths relative to the project location, so those paths also work when the scripts are launched from another directory.
 
 The scripts in `examples/` make API requests when run and expect `OPENAI_API_KEY` in the environment. They do not load `.env` themselves.
+
+## Crowdmark scores
+
+Keep Chrome open with the Playwright extension installed in your intended profile.
+Set `PLAYWRIGHT_MCP_EXTENSION_TOKEN` in the root `.env` file, then run:
+
+```bash
+python "automations/crowdmark.py"
+```
+
+The automation uses the existing browser session, or
+opens the Waterloo LEARN sign-in flow if necessary. Complete university sign-in
+when prompted; it does not enter passwords or approve MFA.
+
+The script visits every course linked on the course list and exports assessment
+titles, statuses, displayed scores, numeric percentages when available, and
+source URLs to `data/crowdmark/scores.json`. Each run replaces this export.
+Missing scores remain `null`, while an actual `0%` is stored as zero. The report
+records per-course results and checks assessment counts against the course list
+when those counts are displayed. Partial runs are flagged rather than reported
+as complete. This workflow does not call a language model or change grades.
+
+It requires Node.js/`npx` and the Python packages `mcp` and `python-dotenv` in your
+virtual environment.
