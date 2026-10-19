@@ -98,3 +98,21 @@ as complete. This workflow does not call a language model or change grades.
 
 It requires Node.js/`npx` and the Python packages `mcp` and `python-dotenv` in your
 virtual environment.
+
+## Fall 2026 course outlines
+
+With Chrome open and the same extension token configured, run:
+
+```bash
+python automations/course_outlines.py
+```
+
+The script selects the View links only within the enrolled Fall 2026 course
+table. It switches to each opened outline tab and exports its Tentative Class
+Plan section to `data/course_outlines/fall_2026_class_plans.json`.
+
+Each table keeps its original column names and row values. `original_cells`
+preserves every row, including the header, with cell types and row/column spans.
+Original table HTML, section HTML, and surrounding notes are also saved. Dates,
+topics, and assessments are not normalized. Missing sections or extraction
+failures are flagged per course; rerunning replaces the JSON export.
