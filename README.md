@@ -2,6 +2,21 @@
 
 A personal assistant project, starting with Gmail exports and a local SQLite database.
 
+## React homepage
+
+The `frontend/` directory contains a React + Vite homepage with the JARVIS logo
+centered on a black background. It requires Node.js 20.19+ (20.x) or 22.12+.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite. To create a production build, run
+`npm run build`; the output is saved in `frontend/dist/`. Use `npm run preview`
+to preview that build locally.
+
 ## Project layout
 
 ```text

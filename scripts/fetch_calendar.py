@@ -1,7 +1,6 @@
 import datetime
-import os.path
 from pathlib import Path
-import json
+from import_calendar import import_events
 
 
 from google.auth.transport.requests import Request
@@ -13,12 +12,11 @@ from googleapiclient.errors import HttpError
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CREDENTIALS_PATH = PROJECT_ROOT / "secrets" / "gmail_credentials.json"
-TOKEN_PATH = PROJECT_ROOT / "secrets" / "gmail_token.json"
-EMAILS_PATH = PROJECT_ROOT / "data" / "gmail" / "raw_calendars.json"
+TOKEN_PATH = PROJECT_ROOT / "secrets" / "calendar_token.json"
 
 
 
-# If modifying these scopes, delete the file token.json.
+# If modifying these scopes, delete secrets/calendar_token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
@@ -27,11 +25,11 @@ def main():
   Prints the start and name of the next 10 events on the user's calendar.
   """
   creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
+  # secrets/calendar_token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
-  if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+  if TOKEN_PATH.exists():
+    creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
   # If there are no (valid) credentials available, let the user log in.
   if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
@@ -69,14 +67,11 @@ def main():
       return
 
     # Prints the start and name of the next 10 events
-    all_events = []
     for event in events:
       start = event["start"].get("dateTime", event["start"].get("date"))
-      print(start, event["summary"])
-      
-      all_events.append(event)
-      with open(EMAILS_PATH, "w") as file:
-        json.dump(all_events , file, indent=4)
+      print(start, event.get("summary", "(Untitled event)"))
+
+    import_events(events)
 
 
   except HttpError as error:

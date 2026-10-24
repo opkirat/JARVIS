@@ -1,10 +1,9 @@
-import json
 from pathlib import Path
+from import_gmail import import_emails
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CREDENTIALS_PATH = PROJECT_ROOT / "secrets" / "gmail_credentials.json"
 TOKEN_PATH = PROJECT_ROOT / "secrets" / "gmail_token.json"
-EMAILS_PATH = PROJECT_ROOT / "data" / "gmail" / "raw_emails.json"
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -58,8 +57,8 @@ def main():
             )
 
             all_emails.append(msg)
-            with open(EMAILS_PATH, "w") as file:
-                json.dump(all_emails , file, indent=4)
+
+        import_emails(all_emails)
     
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.

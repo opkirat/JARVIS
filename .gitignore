@@ -34,6 +34,7 @@ Linkedin/
 playwright-report/
 test-results/
 node_modules/
+/frontend/dist/
 
 # Local editor and macOS files
 .vscode/
