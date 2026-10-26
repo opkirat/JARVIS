@@ -2,6 +2,42 @@
 
 A personal assistant project, starting with Gmail exports and a local SQLite database.
 
+## Automatic Gmail sync on macOS
+
+`launchd/com.jarvis.gmail-sync.plist` runs Gmail sync at login/load and every
+five minutes while your Mac is awake and you are logged in. It uses the project's
+virtual environment and writes directly to SQLite. The paths in this file are
+specific to `/Users/opthukral/JARVIS-1`; update them if the checkout moves.
+
+Authorize Gmail manually before enabling the agent:
+
+```bash
+.venv/bin/python scripts/fetch_gmail.py
+mkdir -p data/logs "$HOME/Library/LaunchAgents"
+cp launchd/com.jarvis.gmail-sync.plist "$HOME/Library/LaunchAgents/"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.jarvis.gmail-sync.plist"
+```
+
+The scheduled command uses `--non-interactive`: it refreshes the saved token,
+but reports an error instead of opening sign-in if authorization is required.
+Logs are in ignored `data/logs/gmail-sync.log` and
+`data/logs/gmail-sync.error.log`. The existing fetcher checks one page of inbox
+messages each run; incremental history synchronization is not implemented yet.
+
+Check status or run the job immediately:
+
+```bash
+launchctl print "gui/$(id -u)/com.jarvis.gmail-sync"
+launchctl kickstart "gui/$(id -u)/com.jarvis.gmail-sync"
+```
+
+To disable it now and prevent it starting at future logins:
+
+```bash
+launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.jarvis.gmail-sync.plist"
+rm "$HOME/Library/LaunchAgents/com.jarvis.gmail-sync.plist"
+```
+
 ## React homepage
 
 The `frontend/` directory contains a React + Vite homepage with the JARVIS logo
@@ -17,6 +53,47 @@ Open the local URL printed by Vite. To create a production build, run
 `npm run build`; the output is saved in `frontend/dist/`. Use `npm run preview`
 to preview that build locally.
 
+## Realtime voice
+
+The homepage can connect your microphone to `gpt-realtime-2.1` for a spoken
+conversation. The model uses the Marin voice. Start the Python server in one
+terminal from the project root:
+
+```bash
+.venv/bin/python examples/llm_example.py
+```
+
+In a second terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`, click **Talk to JARVIS**, allow microphone access,
+and speak. Use **End conversation** to disconnect and release the microphone.
+The audio playback controls can resume playback if your browser blocks autoplay.
+Sessions also disconnect after five minutes. Realtime API usage is billed to
+your OpenAI project while you use voice.
+
+`examples/llm_example.py` loads the existing root `.env` and keeps
+`OPENAI_API_KEY` server-side. The frontend requests a short-lived token through
+Vite's `/api` proxy, then sends microphone audio directly to OpenAI over WebRTC.
+Tokens and audio are not saved to files. This version supports conversation;
+it does not yet query SQLite or use Gmail/Calendar tools.
+
+The server binds only to `127.0.0.1:8765`. It is a local development server,
+not an authenticated public backend. `/health` reports server health; the
+frontend development and preview ports are fixed at 5173 and 4173.
+
+Offline verification:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -p test_voice_server.py -v
+```
+
+Reference: [OpenAI Realtime WebRTC guide](https://developers.openai.com/api/docs/guides/voice-webrtc).
+
 ## Project layout
 
 ```text
@@ -26,7 +103,7 @@ scripts/
   fetch_calendar.py    # Download upcoming Calendar events
   import_calendar.py   # Load Calendar events into SQLite
 examples/
-  llm_example.py       # Standalone model API example
+  llm_example.py       # Local realtime voice token server
   summarize_emails.py  # Summarize selected database emails
 sql/
   list_emails.sql      # Query the Gmail table
@@ -88,7 +165,10 @@ sqlite3 -header -csv data/jarvis.db "SELECT * FROM gmail;" > data/exports/emails
 
 The Gmail scripts resolve data and credential paths relative to the project location, so those paths also work when the scripts are launched from another directory.
 
-The scripts in `examples/` make API requests when run and expect `OPENAI_API_KEY` in the environment. They do not load `.env` themselves.
+`examples/llm_example.py` loads `OPENAI_API_KEY` from the root `.env` and starts
+a local server; it calls OpenAI only when a voice token is requested.
+`examples/summarize_emails.py` makes an API request when run and expects
+`OPENAI_API_KEY` to already be set in its environment.
 
 ## Crowdmark scores
 
