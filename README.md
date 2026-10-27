@@ -56,7 +56,7 @@ to preview that build locally.
 ## Realtime voice
 
 The homepage can connect your microphone to `gpt-realtime-2.1` for a spoken
-conversation. The model uses the Marin voice. Start the Python server in one
+conversation. The model uses the Cedar voice. Start the Python server in one
 terminal from the project root:
 
 ```bash
@@ -79,8 +79,22 @@ your OpenAI project while you use voice.
 `examples/llm_example.py` loads the existing root `.env` and keeps
 `OPENAI_API_KEY` server-side. The frontend requests a short-lived token through
 Vite's `/api` proxy, then sends microphone audio directly to OpenAI over WebRTC.
-Tokens and audio are not saved to files. This version supports conversation;
-it does not yet query SQLite or use Gmail/Calendar tools.
+Tokens and audio are not saved to files. Voice sessions can use `search_gmail`
+and `read_gmail_email` to retrieve mail from `data/jarvis.db` on demand. Only
+matching search rows and requested message text are returned to the model;
+the full database is not uploaded. Search results use a compact tab-separated
+table, and long message bodies can be read in pages.
+
+`examples/gmail_tools.py` uses a read-only SQLite connection and fixed,
+parameterized queries. Voice cannot send, delete, or change emails. The local
+table is a partial snapshot. `gmail.received_at` stores Gmail's `internalDate`
+as an ISO 8601 UTC timestamp, and searches return newest received emails first.
+The importer adds the column to existing databases and updates rows on repeat
+fetches, including their received timestamps.
+`search_crowdmark` also retrieves course assessments and displayed scores from
+`crowdmark`, using a read-only connection and compact result tables. Missing
+scores are distinct from zero; course weights and final course grades are not
+inferred. Calendar and weather tools are not connected yet.
 
 The server binds only to `127.0.0.1:8765`. It is a local development server,
 not an authenticated public backend. `/health` reports server health; the
@@ -90,6 +104,8 @@ Offline verification:
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -p test_voice_server.py -v
+.venv/bin/python -m unittest discover -s tests -p test_gmail_tools.py -v
+node --test frontend/tests/voiceToolCalls.test.js
 ```
 
 Reference: [OpenAI Realtime WebRTC guide](https://developers.openai.com/api/docs/guides/voice-webrtc).

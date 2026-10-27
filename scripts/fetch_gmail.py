@@ -70,7 +70,10 @@ def main(*, non_interactive=False):
             if not non_interactive:
                 print(f'Message ID: {message["id"]}')
             msg = (
-            service.users().messages().get(userId="me", id=message["id"]).execute()
+            service.users().messages().get(
+                userId="me", id=message["id"], format="full",
+                fields="id,snippet,labelIds,internalDate,payload",
+            ).execute()
             )
 
             all_emails.append(msg)

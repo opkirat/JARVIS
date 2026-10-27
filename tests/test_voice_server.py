@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
 MODULE_PATH = Path(__file__).resolve().parent.parent / 'examples' / 'llm_example.py'
-spec = importlib.util.spec_from_file_location('jarvis_voice', MODULE_PATH)
+spec = importlib.util.spec_from_file_location('examples.llm_example', MODULE_PATH)
 voice = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(voice)
 
@@ -34,6 +34,9 @@ class VoiceServerTests(unittest.TestCase):
         request = upstream.call_args.args[0]
         payload = json.loads(request.data)
         self.assertEqual(payload['session']['model'], 'gpt-realtime-2.1')
+        self.assertEqual(payload['session']['audio']['output']['voice'], 'cedar')
+        self.assertEqual(payload['session']['max_output_tokens'], 4096)
+        self.assertEqual({tool['name'] for tool in payload['session']['tools']}, {'search_gmail', 'read_gmail_email', 'search_crowdmark'})
         self.assertEqual(payload['expires_after']['seconds'], 60)
         self.assertEqual(request.get_header('Authorization'), 'Bearer synthetic-project-key')
 
@@ -74,6 +77,29 @@ class VoiceServerTests(unittest.TestCase):
             handler.do_POST()
             create.assert_not_called()
         self.assertEqual(handler.respond.call_args.args[0], 403)
+
+    def test_email_tool_route_passes_only_name_and_arguments(self):
+        handler = object.__new__(voice.VoiceHandler)
+        handler.path = '/api/realtime/tool'
+        payload = json.dumps({'name': 'search_gmail', 'arguments': {'query': 'assignment'}}).encode()
+        handler.headers = {'X-Jarvis-Voice': '1', 'Content-Length': str(len(payload))}
+        handler.rfile = io.BytesIO(payload)
+        handler.respond = MagicMock()
+        with patch.object(voice, 'lookup_gmail', return_value={'count': 0}) as lookup:
+            handler.do_POST()
+            lookup.assert_called_once_with('search_gmail', {'query': 'assignment'})
+        handler.respond.assert_called_once_with(200, {'count': 0})
+
+    def test_email_tool_route_rejects_malformed_payload(self):
+        handler = object.__new__(voice.VoiceHandler)
+        handler.path = '/api/realtime/tool'
+        handler.headers = {'X-Jarvis-Voice': '1', 'Content-Length': '3'}
+        handler.rfile = io.BytesIO(b'bad')
+        handler.respond = MagicMock()
+        with patch.object(voice, 'lookup_gmail') as lookup:
+            handler.do_POST()
+            lookup.assert_not_called()
+        self.assertEqual(handler.respond.call_args.args[0], 400)
 
 
 if __name__ == '__main__':

@@ -56,9 +56,11 @@ body {
 }
 .voice-button:hover { background: #991b1b; }
 .voice-button.stop { background: #171717; border-color: #52525b; }
+.voice-button.mute-button { background: #171717; border-color: #52525b; }
+.voice-button.mute-button:hover { background: #27272a; }
+.voice-button.mute-button.muted { background: #451a1a; border-color: #ef4444; }
 .voice-button:focus-visible { outline: 2px solid #fff; outline-offset: 5px; }
 .voice-hint { max-width: 360px; font-size: 12px; line-height: 1.6; color: #96969f; }
 .voice-error { color: #fca5a5; line-height: 1.5; }
-.voice-caption { max-width: 560px; line-height: 1.6; color: #d4d4d8; }
 .voice-audio { margin-top: 16px; max-width: 100%; }
 .voice-audio:not([controls]) { display: none; }

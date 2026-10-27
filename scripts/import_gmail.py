@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import base64
+from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -29,11 +30,18 @@ def import_emails(emails):
         delivered TEXT,
         sender TEXT,
         subject TEXT,
-        body TEXT
+        body TEXT,
+        received_at TEXT
     )
     """)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(gmail)")}
+    if "received_at" not in columns:
+        connection.execute("ALTER TABLE gmail ADD COLUMN received_at TEXT")
 
     for email in emails:
+        received_at = datetime.fromtimestamp(
+            int(email["internalDate"]) / 1000, tz=timezone.utc
+        ).isoformat(timespec="milliseconds")
         delivered = None ## So Delivered doesn't become undefined
         sender = None
         subject = None
@@ -55,7 +63,17 @@ def import_emails(emails):
                 subject = header["value"]
 
         connection.execute(
-        "INSERT INTO gmail (id, snippet, labelIds, delivered, sender, subject, body) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
+        """INSERT INTO gmail
+        (id, snippet, labelIds, delivered, sender, subject, body, received_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            snippet = excluded.snippet,
+            labelIds = excluded.labelIds,
+            delivered = excluded.delivered,
+            sender = excluded.sender,
+            subject = excluded.subject,
+            body = excluded.body,
+            received_at = excluded.received_at""",
         (
             email['id'],
              email['snippet'],
@@ -63,7 +81,8 @@ def import_emails(emails):
              delivered,
              sender,
              subject,
-             body
+             body,
+             received_at
              )
             )
     connection.commit()
